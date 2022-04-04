@@ -1,4 +1,3 @@
-from multiprocessing.sharedctypes import Value
 import numpy as np
 import numbers
 from collections.abc import Iterable
@@ -9,12 +8,12 @@ import heapq
 
 # https://github.com/scikit-learn/scikit-learn/blob/37ac6788c/sklearn/datasets/_samples_generator.py#L792
 
+# Distribution:
+# 0 for normal
+# 1 for uniform
+def gen_cluster_normal(n_samples=100, n_features=2, centers=None, cluster_std=1.0, center_box=(-10.0, 10.0), return_centers=True):
 
-def my_make_blobs(n_samples=100, n_features=2, centers=None, cluster_std=1.0, center_box=(-10.0, 10.0), return_centers=False):
-
-    # Uncomment for reproducible results, NOT WORKING
-    # np.random.seed(2022)
-
+    # Uncomment for reproducible results
     rng = np.random.default_rng(2022)
 
     if isinstance(n_samples, numbers.Integral):
@@ -91,11 +90,6 @@ def my_make_blobs(n_samples=100, n_features=2, centers=None, cluster_std=1.0, ce
 
     y = np.array(y)
 
-    # X = np.concatenate(X)
-    # if return_centers:
-    #     return X, y, centers
-    # return X, y
-
     if return_centers:
         return X, y, centers
     return X, y
@@ -130,23 +124,24 @@ class Sample:
 
 def weighted_sample_elimination(S_np):
 
-    desired = len(S_np) // 2
+    if not isinstance(S_np, np.ndarray):
+        S_np = np.array(S_np)
+
+    desired = len(S_np) // 1.5
 
     # Circle containing all the points in S
     C, r2 = miniball.get_bounding_ball(S_np)
     # print(C, r2)
     c_area = r2 * np.pi
 
-    # Build a kd-tree for samples
+    # Build a kd-tree with the points
     kd = spatial.KDTree(S_np)
 
     r_max_2d = np.sqrt(c_area/(2*np.sqrt(3)*len(S_np)))
 
+    # From numpy array of lists to lists of tuples
+    # Tuples are hashable, arrays are not
     S = list(map(tuple, S_np))
-
-    for i in range(len(S_np)):
-        if S_np[i][0] != S[i][0] or S_np[i][1] != S[i][1]:
-            raise ValueError
 
     samples = dict()
 
@@ -186,3 +181,76 @@ def weighted_sample_elimination(S_np):
         heapq.heapify(pq)
 
     return np.array(list(map(lambda x: x.coords, pq)))
+
+# Center box, the range in which the ellipses can be centered
+def gen_cluster_uniform(samples=[1000], centers=None, n_features=2, center_box=(-2.5, 2.5), min_size=0.5, max_size=5, return_centers=True, weighted_elim=False):
+    # rng = np.random.default_rng(2022)
+    rng = np.random.default_rng()
+
+    n_centers = len(samples)
+    if centers is not None and len(centers) != len(samples):
+        raise ValueError("If provided, len(centers) must be equal to len(samples)")
+    if centers is None:
+        centers = rng.uniform(
+                center_box[0], center_box[1], size=(n_centers, n_features)
+            )
+
+    X = []
+    Y = []
+    # https://stackoverflow.com/questions/87734/how-do-you-calculate-the-axis-aligned-bounding-box-of-an-ellipse
+    for i in range(len(samples)):
+
+        radiusX = rng.uniform(min_size,max_size)
+        radiusY = rng.uniform(radiusX, max_size)
+
+        phi = rng.uniform(0,2*np.pi)
+
+        radians90 = phi + np.pi / 2
+
+        ux = radiusX * np.cos(phi)
+        uy = radiusX * np.sin(phi)
+        vx = radiusY * np.cos(radians90)
+        vy = radiusY * np.sin(radians90)
+
+        bbox_halfwidth = np.sqrt(ux * ux + vx * vx)
+        bbox_halfheight = np.sqrt(uy * uy + vy * vy)
+        min_x = centers[i][0] - bbox_halfwidth
+        min_y = centers[i][1] - bbox_halfheight
+
+        max_x = centers[i][0] + bbox_halfwidth
+        max_y = centers[i][1] + bbox_halfheight
+
+        X.append(rng.uniform(min_x, max_x, samples[i]))
+        Y.append(rng.uniform(min_y, max_y, samples[i]))
+
+        X , Y = points_in_ellipse(X,Y, radiusX, radiusY, centers[i][0], centers[i][1], phi)
+
+
+        XY = list(zip(X, Y))
+        if weighted_elim:
+            XY = weighted_sample_elimination(XY)
+        
+
+        return [radiusX,radiusY], np.rad2deg(phi), centers[i], XY, bbox_halfwidth, bbox_halfheight
+
+# https://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
+def points_in_ellipse(Px, Py, a, b, cx, cy, angle):
+
+    cos_angle = np.cos(angle)
+    sin_angle = np.sin(angle)
+
+    a2 = a*a
+    b2 = b*b
+
+    Px_in_e = []
+    Py_in_e = []
+
+    E = np.power(cos_angle * (Px[0] - cx) + sin_angle * (Py[0] - cy),2) / a2 + \
+        np.power(sin_angle * (Px[0] - cx) - cos_angle * (Py[0] - cy),2) / b2
+
+    for i, e in enumerate(E):
+        if e <= 1:
+            Px_in_e.append(Px[0][i])
+            Py_in_e.append(Py[0][i])
+
+    return Px_in_e, Py_in_e

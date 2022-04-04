@@ -182,7 +182,7 @@ def weighted_sample_elimination(S_np):
     return np.array(list(map(lambda x: x.coords, pq)))
 
 # Center box, the range in which the ellipses can be centered
-def gen_cluster_uniform(samples=[1000], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, weighted_elim=False):
+def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, weighted_elim=False):
     # rng = np.random.default_rng(2022)
     rng = np.random.default_rng()
 
@@ -223,7 +223,6 @@ def gen_cluster_uniform(samples=[1000], centers=None, center_box=(-5, 5), min_si
 
         P = points_in_ellipse(rng.uniform(min_x, max_x, samples[i]),rng.uniform(min_y, max_y, samples[i]), \
                                 radiusX, radiusY, centers[i][0], centers[i][1], phi)
-        
         if weighted_elim:
             P = weighted_sample_elimination(P)
 
@@ -255,5 +254,5 @@ def points_in_ellipse(Px, Py, a, b, cx, cy, angle):
     
     for i, e in enumerate(E):
         if e <= 1:
-            P.append((Px[i],Py[i]))
-    return P
+            P.append([Px[i],Py[i]])
+    return np.array(P)

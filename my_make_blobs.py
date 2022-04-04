@@ -139,8 +139,7 @@ def weighted_sample_elimination(S_np):
 
     r_max_2d = np.sqrt(c_area/(2*np.sqrt(3)*len(S_np)))
 
-    # From numpy array of lists to lists of tuples
-    # Tuples are hashable, arrays are not
+    # Tuples are hashable, np arrays are not
     S = list(map(tuple, S_np))
 
     samples = dict()
@@ -183,7 +182,7 @@ def weighted_sample_elimination(S_np):
     return np.array(list(map(lambda x: x.coords, pq)))
 
 # Center box, the range in which the ellipses can be centered
-def gen_cluster_uniform(samples=[1000], centers=None, n_features=2, center_box=(-2.5, 2.5), min_size=0.5, max_size=5, return_centers=True, weighted_elim=False):
+def gen_cluster_uniform(samples=[1000], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, weighted_elim=False):
     # rng = np.random.default_rng(2022)
     rng = np.random.default_rng()
 
@@ -191,12 +190,13 @@ def gen_cluster_uniform(samples=[1000], centers=None, n_features=2, center_box=(
     if centers is not None and len(centers) != len(samples):
         raise ValueError("If provided, len(centers) must be equal to len(samples)")
     if centers is None:
-        centers = rng.uniform(
-                center_box[0], center_box[1], size=(n_centers, n_features)
-            )
+        # Only 2D generation
+        centers = rng.uniform(center_box[0], center_box[1], size=(n_centers, 2))
 
-    X = []
-    Y = []
+    XY = []
+    bboxes = []
+    angles = []
+    ellipses = []
     # https://stackoverflow.com/questions/87734/how-do-you-calculate-the-axis-aligned-bounding-box-of-an-ellipse
     for i in range(len(samples)):
 
@@ -220,18 +220,21 @@ def gen_cluster_uniform(samples=[1000], centers=None, n_features=2, center_box=(
         max_x = centers[i][0] + bbox_halfwidth
         max_y = centers[i][1] + bbox_halfheight
 
-        X.append(rng.uniform(min_x, max_x, samples[i]))
-        Y.append(rng.uniform(min_y, max_y, samples[i]))
 
-        X , Y = points_in_ellipse(X,Y, radiusX, radiusY, centers[i][0], centers[i][1], phi)
-
-
-        XY = list(zip(X, Y))
-        if weighted_elim:
-            XY = weighted_sample_elimination(XY)
+        P = points_in_ellipse(rng.uniform(min_x, max_x, samples[i]),rng.uniform(min_y, max_y, samples[i]), \
+                                radiusX, radiusY, centers[i][0], centers[i][1], phi)
         
+        if weighted_elim:
+            P = weighted_sample_elimination(P)
 
-        return [radiusX,radiusY], np.rad2deg(phi), centers[i], XY, bbox_halfwidth, bbox_halfheight
+        XY.append(P)
+        bboxes.append((bbox_halfwidth, bbox_halfheight))
+        angles.append(np.rad2deg(phi))
+        ellipses.append((radiusX, radiusY))
+
+
+        # return [radiusX,radiusY], np.rad2deg(phi), centers[i], XY, bbox_halfwidth, bbox_halfheight
+    return XY, centers, angles, bboxes, ellipses
 
 # https://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
 def points_in_ellipse(Px, Py, a, b, cx, cy, angle):
@@ -242,15 +245,15 @@ def points_in_ellipse(Px, Py, a, b, cx, cy, angle):
     a2 = a*a
     b2 = b*b
 
-    Px_in_e = []
-    Py_in_e = []
+    P = []
 
-    E = np.power(cos_angle * (Px[0] - cx) + sin_angle * (Py[0] - cy),2) / a2 + \
-        np.power(sin_angle * (Px[0] - cx) - cos_angle * (Py[0] - cy),2) / b2
+    # E = np.power(cos_angle * (Px[0] - cx) + sin_angle * (Py[0] - cy),2) / a2 + \
+    #     np.power(sin_angle * (Px[0] - cx) - cos_angle * (Py[0] - cy),2) / b2
 
+    E = np.power(cos_angle * (Px - cx) + sin_angle * (Py - cy),2) / a2 + \
+        np.power(sin_angle * (Px - cx) - cos_angle * (Py - cy),2) / b2
+    
     for i, e in enumerate(E):
         if e <= 1:
-            Px_in_e.append(Px[0][i])
-            Py_in_e.append(Py[0][i])
-
-    return Px_in_e, Py_in_e
+            P.append((Px[i],Py[i]))
+    return P

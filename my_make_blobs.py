@@ -294,14 +294,14 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
         # P = points_in_ellipse(rng.uniform(min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]),
         #                       radiusX, radiusY, centers[i][0], centers[i][1], phi)
         # if weighted_elim:
-        #     P = weighted_sample_elimination(P)
+        #     P = weighted_sample_elimination(P, 1.5)
 
         # Generate samples --> Weighted sample elimination --> Removal of points not in ellipse
         P = np.array(list(zip(rng.uniform(
             min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]))))
 
         if weighted_elim:
-            P = weighted_sample_elimination(P)
+            P = weighted_sample_elimination(P, 1.5)
 
         P = points_in_ellipse(P[:, 0], P[:, 1], radiusX,
                               radiusY, centers[i][0], centers[i][1], phi)

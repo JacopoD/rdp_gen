@@ -37,7 +37,7 @@ def test_my_blobs():
                            for i in range(6)]) for _ in range(n_components)]
 
     for i in range(len(X)):
-        X[i] = my_make_blobs.weighted_sample_elimination(X[i])
+        X[i] = my_make_blobs.weighted_sample_elimination(X[i], 1.5)
 
     for k, col in enumerate(colors):
         plt.scatter(X[k][:, 0], X[k][:, 1], c=col, marker=".", s=10)

@@ -8,9 +8,7 @@ import heapq
 
 # https://github.com/scikit-learn/scikit-learn/blob/37ac6788c/sklearn/datasets/_samples_generator.py#L792
 
-# Distribution:
-# 0 for normal
-# 1 for uniform
+
 def gen_cluster_normal(n_samples=100, n_features=2, centers=None, cluster_std=1.0, center_box=(-10.0, 10.0), return_centers=True):
 
     # Uncomment for reproducible results
@@ -122,14 +120,28 @@ class Sample:
         return "Coords: {}, Weight: {}, Neighbors: {}".format(self.coords, self.weight, len(self.neighbors))
 
 
-def weighted_sample_elimination(S_np):
+def weighted_sample_elimination(S_np, factor):
+    """
+    Applies weighted sample elimination to the given set of points,
+    this algorithm is based on: http://www.cemyuksel.com/research/sampleelimination/sampleelimination.pdf
 
+    Parameters:
+        S_np (list or numpy.ndarray):
+            if list, it will be immediately converted to numpy.ndarray
+
+        factor (int or float): 
+            Number of samples will be divided by this factor to obtain the final
+            amount of points that will be returned by the function
+
+    Returns:
+        numpy.ndarray: of length len(S_np) // factor, containing the points with lowest weight
+    """
     if not isinstance(S_np, np.ndarray):
         S_np = np.array(S_np)
 
-    desired = len(S_np) // 1.5
+    desired = len(S_np) // factor
 
-    # Circle containing all the points in S
+    # Circle inscribing all the points in S
     C, r2 = miniball.get_bounding_ball(S_np)
     # print(C, r2)
     c_area = r2 * np.pi
@@ -182,16 +194,72 @@ def weighted_sample_elimination(S_np):
     return np.array(list(map(lambda x: x.coords, pq)))
 
 # Center box, the range in which the ellipses can be centered
+
+
 def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, weighted_elim=False):
+    """
+    Generate uniformly distributed clusters of points enclosed in an ellipse
+
+    Args:
+
+        samples (array-like):
+            default=[100]
+            the number of samples per cluster
+
+        centers (None or array-like):
+            default=None
+            the coordinates of centers of the clusters
+
+        center_box (tuple): 
+            default=(-5, 5)
+            the bounding box for each cluster center
+
+        min_size (float or int): default=0.5
+            the minimum width or height of the ellipse
+
+        max_size (float or int): default=5
+            the maximum width or height of the ellipse
+
+        (return_centers : boolean, default=True
+        If True, return the coordinates of the centers)
+
+        weighted_elim: boolean, dafault=False
+            If True, the weighted sample elimination algorithm will be applied to the samples
+
+    Returns:
+
+        XY (ndarray of ndarray(s)):
+            Len(XY) == len(samples)
+            the samples generated and filtered
+
+        centers (list of unknown):
+            centers of clusters, 
+            the inner object depends on user input if centers != None
+
+        angles (list of float): 
+            the angles representing the tilt of each ellipse
+
+        bboxes (list of tuples): 
+            half width and half height of the bounding box for each ellipse
+
+        ellipses (list of tuples): 
+            radius of x and radius of y axis of each ellipse
+
+
+    TODO : decide if WSE should be applied before or after filtering the points
+    """
+
     # rng = np.random.default_rng(2022)
     rng = np.random.default_rng()
 
     n_centers = len(samples)
     if centers is not None and len(centers) != len(samples):
-        raise ValueError("If provided, len(centers) must be equal to len(samples)")
+        raise ValueError(
+            "If provided, len(centers) must be equal to len(samples)")
     if centers is None:
         # Only 2D generation
-        centers = rng.uniform(center_box[0], center_box[1], size=(n_centers, 2))
+        centers = rng.uniform(
+            center_box[0], center_box[1], size=(n_centers, 2))
 
     XY = []
     bboxes = []
@@ -200,10 +268,10 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
     # https://stackoverflow.com/questions/87734/how-do-you-calculate-the-axis-aligned-bounding-box-of-an-ellipse
     for i in range(len(samples)):
 
-        radiusX = rng.uniform(min_size,max_size)
+        radiusX = rng.uniform(min_size, max_size)
         radiusY = rng.uniform(radiusX, max_size)
 
-        phi = rng.uniform(0,2*np.pi)
+        phi = rng.uniform(0, 2*np.pi)
 
         radians90 = phi + np.pi / 2
 
@@ -220,24 +288,54 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
         max_x = centers[i][0] + bbox_halfwidth
         max_y = centers[i][1] + bbox_halfheight
 
+        # ! Choose a strategy
 
-        P = points_in_ellipse(rng.uniform(min_x, max_x, samples[i]),rng.uniform(min_y, max_y, samples[i]), \
-                                radiusX, radiusY, centers[i][0], centers[i][1], phi)
+        # Generate samples --> Removal of points not in ellipse --> Weighted sample elimination
+        # P = points_in_ellipse(rng.uniform(min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]),
+        #                       radiusX, radiusY, centers[i][0], centers[i][1], phi)
+        # if weighted_elim:
+        #     P = weighted_sample_elimination(P)
+
+        # Generate samples --> Weighted sample elimination --> Removal of points not in ellipse
+        P = np.array(list(zip(rng.uniform(
+            min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]))))
+
         if weighted_elim:
             P = weighted_sample_elimination(P)
+
+        P = points_in_ellipse(P[:, 0], P[:, 1], radiusX,
+                              radiusY, centers[i][0], centers[i][1], phi)
 
         XY.append(P)
         bboxes.append((bbox_halfwidth, bbox_halfheight))
         angles.append(np.rad2deg(phi))
         ellipses.append((radiusX, radiusY))
 
-
-        # return [radiusX,radiusY], np.rad2deg(phi), centers[i], XY, bbox_halfwidth, bbox_halfheight
     return XY, centers, angles, bboxes, ellipses
 
-# https://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
-def points_in_ellipse(Px, Py, a, b, cx, cy, angle):
 
+# https://stackoverflow.com/questions/7946187/point-and-ellipse-rotated-position-test-algorithm
+
+
+def points_in_ellipse(Px, Py, a, b, cx, cy, angle):
+    """
+    Given a list of x,y coordinates and an ellipse,
+    computes a list of only the points which are in the ellipse
+
+    Args:
+
+        Px (list): list of x coordinates for the points
+        Py (list): list of y coordinates for the points
+        a (float): width of the ellipse
+        b (float): height of the ellipse
+        cx (float): x coordinate of the center of the ellipse
+        cy (float): x coordinate of the center of the ellipse
+        angle (float): rotation of the ellipse in radians
+
+    Returns:
+
+        ndarray: list of points in the ellipse
+    """
     cos_angle = np.cos(angle)
     sin_angle = np.sin(angle)
 
@@ -249,10 +347,10 @@ def points_in_ellipse(Px, Py, a, b, cx, cy, angle):
     # E = np.power(cos_angle * (Px[0] - cx) + sin_angle * (Py[0] - cy),2) / a2 + \
     #     np.power(sin_angle * (Px[0] - cx) - cos_angle * (Py[0] - cy),2) / b2
 
-    E = np.power(cos_angle * (Px - cx) + sin_angle * (Py - cy),2) / a2 + \
-        np.power(sin_angle * (Px - cx) - cos_angle * (Py - cy),2) / b2
-    
+    E = np.power(cos_angle * (Px - cx) + sin_angle * (Py - cy), 2) / a2 + \
+        np.power(sin_angle * (Px - cx) - cos_angle * (Py - cy), 2) / b2
+
     for i, e in enumerate(E):
         if e <= 1:
-            P.append([Px[i],Py[i]])
+            P.append([Px[i], Py[i]])
     return np.array(P)

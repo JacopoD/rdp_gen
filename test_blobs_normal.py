@@ -6,9 +6,12 @@ import random
 import numpy as np
 
 
+def main():
+    test_my_blobs()
+
+
 def test_my_blobs():
 
-    
     # X, y, centers = my_make_blobs(
     #     n_samples=1000, centers=4,  cluster_std=0.9,
     #     center_box=(-0.0, 10.0), return_centers=True
@@ -19,20 +22,22 @@ def test_my_blobs():
     #     center_box=(-0.0, 10.0), return_centers=True
     # )
 
+    samples = [100, 200, 300, 150]
+
     X, y, centers = my_make_blobs.gen_cluster_normal(
-        [1000, 50], centers=None,  cluster_std=[0.4, 0.2],
+        samples, centers=None,  cluster_std=[0.4, 0.2, 0.2, 0.5],
         center_box=(-0.0, 10.0), return_centers=True
     )
 
-    n_components = 2
+    n_components = len(samples)
 
     fig, ax = plt.subplots()
 
     colors = ["#"+''.join([random.choice('ABCDEF0123456789')
                            for i in range(6)]) for _ in range(n_components)]
 
-    # for i in range(len(X)):
-    #     X[i] = my_make_blobs.weighted_sample_elimination(X[i])
+    for i in range(len(X)):
+        X[i] = my_make_blobs.weighted_sample_elimination(X[i])
 
     for k, col in enumerate(colors):
         plt.scatter(X[k][:, 0], X[k][:, 1], c=col, marker=".", s=10)
@@ -114,4 +119,5 @@ def confidence_ellipse(X, center):
     return e
 
 
-test_my_blobs()
+if __name__ == "__main__":
+    main()

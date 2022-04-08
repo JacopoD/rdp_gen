@@ -11,11 +11,11 @@ def main():
 
 def test_uniform():
 
-    samples = [100, 200, 300, 150]
+    samples = [100, 200, 300, 1000]
     start = time.perf_counter()
     XY, centers, angles, bboxes, ellipses = my_make_blobs.gen_cluster_uniform(samples=samples,
                                                                               center_box=(-20, 20), min_size=2, max_size=15,
-                                                                              weighted_elim=True)
+                                                                              weighted_elim=False)
 
     end = time.perf_counter()
     fig, ax = plt.subplots()
@@ -34,6 +34,7 @@ def test_uniform():
         s += len(p)
         # plt.scatter(p[:, 0], p[:, 1], c="b", marker=".", s=10)
         ax.scatter(p[:, 0], p[:, 1], c="b", marker=".", s=10)
+
     print("{}/{} samples have been removed. \nThe samples were generated in {} seconds".format(
         sum(samples)-s, sum(samples), end-start))
 

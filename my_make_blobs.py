@@ -125,7 +125,8 @@ def weighted_sample_elimination(S_np, factor):
     Applies weighted sample elimination to the given set of points,
     this algorithm is based on: http://www.cemyuksel.com/research/sampleelimination/sampleelimination.pdf
 
-    Parameters:
+    Args:
+
         S_np (list or numpy.ndarray):
             if list, it will be immediately converted to numpy.ndarray
 
@@ -134,6 +135,7 @@ def weighted_sample_elimination(S_np, factor):
             amount of points that will be returned by the function
 
     Returns:
+
         numpy.ndarray: of length len(S_np) // factor, containing the points with lowest weight
     """
     if not isinstance(S_np, np.ndarray):
@@ -193,8 +195,6 @@ def weighted_sample_elimination(S_np, factor):
 
     return np.array(list(map(lambda x: x.coords, pq)))
 
-# Center box, the range in which the ellipses can be centered
-
 
 def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, weighted_elim=False):
     """
@@ -249,8 +249,8 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
     TODO : decide if WSE should be applied before or after filtering the points
     """
 
-    # rng = np.random.default_rng(2022)
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(2022)
+    # rng = np.random.default_rng()
 
     n_centers = len(samples)
     if centers is not None and len(centers) != len(samples):

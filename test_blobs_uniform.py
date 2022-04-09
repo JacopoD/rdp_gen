@@ -11,17 +11,17 @@ def main():
 
 def test_uniform():
 
-    # samples = [10, 20, 100, 75]
-    # start = time.perf_counter()
-    # XY, centers, angles, bboxes, ellipses = my_make_blobs.gen_cluster_uniform(samples=samples,
-    #                                                                           center_box=(-20, 20), min_size=[8, 4, 5, 10], max_size=[10, 9, 10, 15],
-    #                                                                           wse=True, wse_p=0.9)
-
-    samples = [100000]
+    samples = [10, 20, 100, 75]
     start = time.perf_counter()
     XY, centers, angles, bboxes, ellipses = my_make_blobs.gen_cluster_uniform(samples=samples,
-                                                                              center_box=(-20, 20), min_size=15, max_size=30,
-                                                                              wse=True, wse_p=0.9)
+                                                                              center_box=(-20, 20), min_size=[8, 4, 5, 10], max_size=[10, 9, 10, 15],
+                                                                              wse=True, wse_p=0.5)
+
+    # samples = [100000]
+    # start = time.perf_counter()
+    # XY, centers, angles, bboxes, ellipses = my_make_blobs.gen_cluster_uniform(samples=samples,
+    #                                                                           center_box=(-20, 20), min_size=15, max_size=30,
+    #                                                                           wse=True, wse_p=0.9)
 
     end = time.perf_counter()
     fig, ax = plt.subplots()

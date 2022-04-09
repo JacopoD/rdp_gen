@@ -56,6 +56,10 @@ def weighted_sample_elimination(S_np, percentage=1, return_radius=False):
 
         numpy.ndarray: of length len(S_np) // factor, containing the points with lowest weight
 
+    TODO: improve on the data structure holding neighbors in the Sample class, at the moment it's a simple list the problem is that
+    TODO:   elements are removed from it which is very expensive. Consider using a set or similar.
+    TODO:   Another strategy could be replacing "dead" neighbors with an invalid index such as -1
+
     """
 
     if percentage > 1 or percentage < 0:

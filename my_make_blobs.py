@@ -7,7 +7,7 @@ from wse import weighted_sample_elimination
 # https://github.com/scikit-learn/scikit-learn/blob/37ac6788c/sklearn/datasets/_samples_generator.py#L792
 
 
-def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_box=(-10.0, 10.0), return_centers=True):
+def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_box=(-10.0, 10.0), return_centers=True, wse=False):
     """ 
     Generate normally distributed clusters of points
 
@@ -26,11 +26,11 @@ def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_bo
 
     Returns:
 
-        X: ndarray of ndarrays representing the clusters and their points
+        XY: ndarray of ndarrays representing the clusters and their points
         (optional) centers: the centers of each cluster
     """
     # Uncomment for reproducible results
-    rng = np.random.default_rng(2022)
+    rng = np.random.default_rng()
 
     # n_samples is an array indicating the numbers of samples per cluster.
     n_centers = len(n_samples)
@@ -66,7 +66,7 @@ def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_bo
     if isinstance(cluster_std, numbers.Real):
         cluster_std = np.full(len(centers), cluster_std)
 
-    X = []
+    XY = []
     # y = []
 
     # if isinstance(n_samples, Iterable):
@@ -77,14 +77,17 @@ def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_bo
         std = cluster_std[i]
         # Generate array of size n * n_features
         # where n is the number of points and n_features is the number if dimensions in the space (2D,3D,4D,...)
-        X.append(rng.normal(loc=centers[i], scale=std, size=(n, 2)))
+        xy = rng.normal(loc=centers[i], scale=std, size=(n, 2))
+        if wse:
+            xy = weighted_sample_elimination(xy, 0.95)
+        XY.append(xy)
 
     if return_centers:
-        return X, centers
-    return X
+        return XY, centers
+    return XY
 
 
-def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, weighted_elim=False):
+def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, wse=False):
     """
     Generate uniformly distributed clusters of points enclosed in an ellipse
 
@@ -137,8 +140,8 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
     TODO : decide if WSE should be applied before or after filtering the points
     """
 
-    rng = np.random.default_rng(2022)
-    # rng = np.random.default_rng()
+    # rng = np.random.default_rng(2022)
+    rng = np.random.default_rng()
 
     n_centers = len(samples)
     if centers is not None and len(centers) != len(samples):
@@ -188,7 +191,7 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
         P = np.array(list(zip(rng.uniform(
             min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]))))
 
-        if weighted_elim:
+        if wse:
             P = weighted_sample_elimination(P, 0.9)
 
         P = points_in_ellipse(P[:, 0], P[:, 1], radiusX,

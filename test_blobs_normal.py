@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
 import numpy as np
+import time
+from matplotlib.widgets import Button
 
 
 def main():
@@ -13,10 +15,12 @@ def test_my_blobs():
 
     samples = [20, 200, 300, 150]
 
+    start = time.perf_counter()
     X, centers = my_make_blobs.gen_cluster_normal(
         samples, centers=None,  cluster_std=[0.2, 0.5, 0.8, 0.7],
-        center_box=(-0.0, 10.0), return_centers=True
+        center_box=(-0.0, 10.0), return_centers=True, wse=True
     )
+    end = time.perf_counter()
 
     n_components = len(samples)
 
@@ -25,21 +29,35 @@ def test_my_blobs():
     colors = ["#"+''.join([random.choice('ABCDEF0123456789')
                            for i in range(6)]) for _ in range(n_components)]
 
-    for i in range(len(X)):
-        X[i] = my_make_blobs.weighted_sample_elimination(X[i], 0.95)
-
     for k, col in enumerate(colors):
         plt.scatter(X[k][:, 0], X[k][:, 1], c=col, marker=".", s=10)
 
-    plt.scatter(centers[:, 0], centers[:, 1], c="b", s=50)
-
+    # plt.scatter(centers[:, 0], centers[:, 1], c="b", s=50)
+    s = 0
+    C = []
     for j in range(len(X)):
-        ax.add_patch(confidence_ellipse(X[j], centers[j]))
+        s += len(X[j])
+        C.append(confidence_ellipse(X[j], centers[j]))
+        ax.add_patch(C[j])
+
+    print("=============\n{}/{} samples have been removed. \nThe samples were generated in {} seconds".format(
+        sum(samples)-s, sum(samples), end-start))
+
+    button = Button(plt.axes([0.81, 0.000001, 0.1, 0.075]),
+                    'Show bbox', hovercolor='0.975')
+
+    def reset(event):
+        for c in C:
+            c.set_visible(not c.get_visible())
+        plt.draw()
+
+    button.on_clicked(reset)
 
     plt.title("My Blobs")
     # plt.xticks([])
     # plt.yticks([])
     plt.show()
+
 
 # http://www.cs.utah.edu/~tch/CS6640F2020/resources/How%20to%20draw%20a%20covariance%20error%20ellipse.pdf
 
@@ -56,10 +74,10 @@ def confidence_ellipse(X, center):
 
     eigenval = np.array([[eigenval[0], 0], [0, eigenval[1]]])
 
-    print("Eigenvectors: \n{}\n Eigenvalues: \n{}\n".format(eigenvec, eigenval))
+    # print("Eigenvectors: \n{}\n Eigenvalues: \n{}\n".format(eigenvec, eigenval))
 
-    print("Max eigenval: {}".format(max_eigenval))
-    print("Min eigenval: {}".format(min_eigenval))
+    # print("Max eigenval: {}".format(max_eigenval))
+    # print("Min eigenval: {}".format(min_eigenval))
 
     max_eigenvec_ind_c = 0
     max_eigenval = eigenval[0][0]
@@ -69,19 +87,19 @@ def confidence_ellipse(X, center):
                 max_eigenvec_ind_c = c
                 max_eigenval = eigenval[r][c]
 
-    print("Max eigenvector in eigenvectors matrix (column): {}".format(
-        max_eigenvec_ind_c))
+    # print("Max eigenvector in eigenvectors matrix (column): {}".format(
+    #     max_eigenvec_ind_c))
 
     max_eigenvec = eigenvec[:, max_eigenvec_ind_c]
 
-    print("Max eigenvector: {}".format(max_eigenvec))
+    # print("Max eigenvector: {}".format(max_eigenvec))
 
     if(max_eigenvec_ind_c == 0):
         min_eigenvec = eigenvec[:, 1]
     else:
         min_eigenvec = eigenvec[0, :]
 
-    print("Min eigenvector: ", min_eigenvec)
+    # print("Min eigenvector: ", min_eigenvec)
 
     angle = np.arctan2(max_eigenvec[1], max_eigenvec[0])
 
@@ -98,7 +116,7 @@ def confidence_ellipse(X, center):
     a = np.sqrt(max_eigenval) * n_std * 2
     b = np.sqrt(min_eigenval) * n_std * 2
 
-    print("Theta: ", angle)
+    # print("Theta: ", angle)
 
     theta = np.degrees(angle)
 

@@ -1,6 +1,4 @@
-from turtle import color
 import unittest
-
 import wse
 import numpy as np
 import matplotlib.pyplot as plt

@@ -11,10 +11,16 @@ def main():
 
 def test_uniform():
 
-    samples = [100, 200, 300, 500]
+    # samples = [10, 20, 100, 75]
+    # start = time.perf_counter()
+    # XY, centers, angles, bboxes, ellipses = my_make_blobs.gen_cluster_uniform(samples=samples,
+    #                                                                           center_box=(-20, 20), min_size=[8, 4, 5, 10], max_size=[10, 9, 10, 15],
+    #                                                                           wse=True)
+
+    samples = [100000]
     start = time.perf_counter()
     XY, centers, angles, bboxes, ellipses = my_make_blobs.gen_cluster_uniform(samples=samples,
-                                                                              center_box=(-20, 20), min_size=2, max_size=15,
+                                                                              center_box=(-20, 20), min_size=15, max_size=30,
                                                                               wse=True)
 
     end = time.perf_counter()
@@ -38,16 +44,7 @@ def test_uniform():
     print("=============\n{}/{} samples have been removed. \nThe samples were generated in {} seconds".format(
         sum(samples)-s, sum(samples), end-start))
 
-    # ax.set_ylim(-10,10)
-    # ax.set_xlim(-10,10)
-
     def reset(event):
-        # R[0].set(visible=False)
-        # for r in R:
-        #     print(r)
-        #     r.set(visible=True)
-        #     # r.remove()
-        #     print("A")
         for r in R:
             r.set_visible(not r.get_visible())
         plt.draw()

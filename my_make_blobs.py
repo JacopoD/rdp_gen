@@ -7,17 +7,32 @@ from wse import weighted_sample_elimination
 # https://github.com/scikit-learn/scikit-learn/blob/37ac6788c/sklearn/datasets/_samples_generator.py#L792
 
 
-def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_box=(-10.0, 10.0), return_centers=True, wse=False):
+def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_box=(-10.0, 10.0), return_centers=True, wse=False, wse_p=1):
     """ 
     Generate normally distributed clusters of points
 
     Args:
 
-        n_samples (list, optional): List containing the number of samples per cluster. Defaults to [100].
-        centers (None or list, optional): List containing the coordinates of the centers of each cluster. Defaults to None.
-        cluster_std (float, optional): List containing the standard deviation for each cluster. Defaults to 1.0.
-        center_box (tuple, optional): Range in which the centers of the clusters can be genearted. Defaults to (-10.0, 10.0).
-        return_centers (bool, optional): If true the coordinates of the centers of the clusters will be returned. Defaults to True.
+        n_samples (list, optional): Default=[100]
+            List containing the number of samples per cluster.
+
+        centers (None or list, optional): Default=None.
+            List containing the coordinates of the centers of each cluster.
+
+        cluster_std (float, optional):  Default=1.0.
+            List containing the standard deviation for each cluster.
+
+        center_box (tuple, optional):  Default=(-10.0, 10.0).
+            Range in which the centers of the clusters can be genearted.
+
+        return_centers (bool, optional): Default=True.
+            If true the coordinates of the centers of the clusters will be returned. 
+
+        wse (bool, optional): Default=False
+            If true weighted sample elimination will be applied to the generated samples.
+
+        wse_p (float, optional): Default=1
+            The percentage of samples that, if wse is applied (==> wse = True) will have weight zero when returned.
 
     Raises:
         ValueError: _description_
@@ -83,7 +98,7 @@ def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_bo
         # where n is the number of points and n_features is the number if dimensions in the space (2D,3D,4D,...)
         xy = rng.normal(loc=centers[i], scale=std, size=(n, 2))
         if wse:
-            xy = weighted_sample_elimination(xy, 0.95)
+            xy = weighted_sample_elimination(xy, wse_p)
         XY.append(xy)
 
     if return_centers:
@@ -91,22 +106,19 @@ def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_bo
     return XY
 
 
-def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, wse=False):
+def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, wse=False, wse_p=1):
     """
     Generate uniformly distributed clusters of points enclosed in an ellipse
 
     Args:
 
-        samples (array-like):
-            default=[100]
+        samples (array-like): default=[100]
             the number of samples per cluster
 
-        centers (None or array-like):
-            default=None
+        centers (None or array-like): default=None
             the coordinates of centers of the clusters
 
-        center_box (tuple): 
-            default=(-5, 5)
+        center_box (tuple): default=(-5, 5)
             the bounding box for each cluster center
 
         min_size (number or array-like): default=0.5
@@ -120,8 +132,11 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
         (return_centers : boolean, default=True
         If True, return the coordinates of the centers)
 
-        weighted_elim: boolean, dafault=False
+        wse: (boolean, optional), default=False
             If True, the weighted sample elimination algorithm will be applied to the samples
+
+        wse_p (float, optional): default=1
+            The percentage of samples that, if wse is applied (==> wse = True) will have weight zero when returned.
 
     Returns:
 
@@ -202,7 +217,7 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
         P = points_in_ellipse(rng.uniform(min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]),
                               radiusX, radiusY, centers[i][0], centers[i][1], phi)
         if wse:
-            P = weighted_sample_elimination(P, 0.9)
+            P = weighted_sample_elimination(P, wse_p)
 
         # Generate samples --> Weighted sample elimination --> Removal of points not in ellipse
         # P = np.array(list(zip(rng.uniform(

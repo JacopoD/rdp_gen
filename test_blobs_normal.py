@@ -14,15 +14,16 @@ def main():
 def test_my_blobs():
 
     samples = [20, 200, 300, 150]
-
+    cluster_std = [0.2, 0.5, 0.8, 0.7]
     start = time.perf_counter()
+
     X, centers = my_make_blobs.gen_cluster_normal(
-        samples, centers=None,  cluster_std=[0.2, 0.5, 0.8, 0.7],
+        samples, centers=None,  cluster_std=cluster_std,
         center_box=(-0.0, 10.0), return_centers=True, wse=True
     )
     end = time.perf_counter()
 
-    n_components = len(samples)
+    n_components = len(X)
 
     fig, ax = plt.subplots()
 

@@ -9,7 +9,7 @@ from wse import weighted_sample_elimination
 
 def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_box=(-10.0, 10.0), return_centers=True, wse=False, wse_p=1):
     """ 
-    Generate normally distributed clusters of points
+    Generate normally distributed clusters of 2D points
 
     Args:
 
@@ -108,7 +108,7 @@ def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_bo
 
 def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_size=0.5, max_size=5, return_centers=True, wse=False, wse_p=1):
     """
-    Generate uniformly distributed clusters of points enclosed in an ellipse
+    Generate uniformly distributed clusters of 2D points enclosed in an ellipse
 
     Args:
 

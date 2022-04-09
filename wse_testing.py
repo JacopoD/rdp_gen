@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(2022)
     S = rng.normal((0, 0), scale=0.5, size=(20, 2))
-    S1, radius = wse.weighted_sample_elimination(S, 0.3)
+    S1, radius = wse.weighted_sample_elimination(S, 0.8)
 
     fig, ax = plt.subplots()
 

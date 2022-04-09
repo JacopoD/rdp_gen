@@ -71,7 +71,6 @@ def weighted_sample_elimination(S_np, percentage=1):
 
     # Circle inscribing all the points in S
     C, r2 = miniball.get_bounding_ball(S_np)
-    # print(C, r2)
     c_area = r2 * np.pi
 
     # Build a kd-tree with the points
@@ -87,10 +86,8 @@ def weighted_sample_elimination(S_np, percentage=1):
     pq = []
 
     for i, s in enumerate(S):
-        # s_tuple = (s[0], s[1])
         new_s = Sample(coords=s, index=i)
         samples[s] = new_s
-        # heapq.heappush(pq, new_s)
 
     N = kd.query_ball_tree(kd, r_max_2d)
     no_w_count = 0
@@ -121,13 +118,10 @@ def weighted_sample_elimination(S_np, percentage=1):
 
     print("{} more samples will be removed to reach {}%".format(v, percentage*100))
 
-    # print(int(percentage * len(S)), v)
-
     removed_count = 0
 
     for j in range(v):
         s_j = heapq.heappop(pq)
-        # print(s_j)
         if s_j.weight == 0:
             break
 
@@ -145,35 +139,11 @@ def weighted_sample_elimination(S_np, percentage=1):
         removed_count += 1
         heapq.heapify(pq)
 
-    # while no_w_count < v:
-    #     s_j = heapq.heappop(pq)
-    #     # print(s_j)
-    #     if s_j.weight == 0:
-    #         break
-
-    #     for i, s_i in enumerate(s_j.neighbors):
-    #         if i == 0:
-    #             continue
-    #         if S[s_i] in samples:
-    #             s_i_obj = samples[S[s_i]]
-    #             s_i_obj.neighbors.remove(s_j.index)
-    #             s_i_obj.weight += s_j.weight
-    #             # print(s_i_obj)
-    #             if s_i_obj.weight == 0:
-    #                 no_w_count += 1
-    #     del samples[s_j.coords]
-    #     removed_count += 1
-    #     heapq.heapify(pq)
-
     for key in samples:
         print(samples[key])
 
-    # print(no_w_count, len(samples))
-    # if v != no_w_count:
     print("{}% of the samples are now with weight = 0\n{} samples have been removed".format(
         percentage*100, removed_count))
-    # else:
-    #     print("Removed {} samples".format(v))
 
     return np.array(list(map(lambda x: samples[x].coords, samples))), r_max_2d
 

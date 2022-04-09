@@ -44,9 +44,6 @@ def weighted_sample_elimination(S_np, percentage=1):
     Applies weighted sample elimination to the given set of points,
     this algorithm is based on: http://www.cemyuksel.com/research/sampleelimination/sampleelimination.pdf
 
-    The percentage of samples removed is not guaranteed, the elimination process stops when the highest weight is == 0
-    If more samples than what it will take to reach max weight == 0 
-    If max weight == 0 is reached before the specified amount of samples is eliminated the output will not be int(len(S_np)*(1-percentage))
     Args:
 
         S_np (list or numpy.ndarray):
@@ -58,8 +55,6 @@ def weighted_sample_elimination(S_np, percentage=1):
     Returns:
 
         numpy.ndarray: of length len(S_np) // factor, containing the points with lowest weight
-
-    TODO: In case max W == 0 is reached before the specified amount of samples is reached add the possibility to randomly remove samples
 
     """
 

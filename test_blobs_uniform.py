@@ -11,11 +11,11 @@ def main():
 
 def test_uniform():
 
-    samples = [100, 200, 300, 1000]
+    samples = [100, 200, 300, 500]
     start = time.perf_counter()
     XY, centers, angles, bboxes, ellipses = my_make_blobs.gen_cluster_uniform(samples=samples,
                                                                               center_box=(-20, 20), min_size=2, max_size=15,
-                                                                              weighted_elim=False)
+                                                                              weighted_elim=True)
 
     end = time.perf_counter()
     fig, ax = plt.subplots()

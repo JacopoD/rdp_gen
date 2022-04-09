@@ -39,7 +39,7 @@ class Sample:
         return s
 
 
-def weighted_sample_elimination(S_np, percentage=1):
+def weighted_sample_elimination(S_np, percentage=1, return_radius=False):
     """
     Applies weighted sample elimination to the given set of points,
     this algorithm is based on: http://www.cemyuksel.com/research/sampleelimination/sampleelimination.pdf
@@ -140,6 +140,8 @@ def weighted_sample_elimination(S_np, percentage=1):
     print("{}% of the samples are now with weight = 0\n{} samples have been removed".format(
         percentage*100, removed_count))
 
-    return np.array(list(map(lambda x: samples[x].coords, samples))), r_max_2d
+    if return_radius:
+        return np.array(list(map(lambda x: samples[x].coords, samples))), r_max_2d
+    return np.array(list(map(lambda x: samples[x].coords, samples)))
 
     # return np.array(list(map(lambda x: x.coords, pq)))

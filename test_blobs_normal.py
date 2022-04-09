@@ -1,4 +1,3 @@
-# from sklearn.cluster import kmeans_plusplus
 import my_make_blobs
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -12,20 +11,10 @@ def main():
 
 def test_my_blobs():
 
-    # X, y, centers = my_make_blobs(
-    #     n_samples=1000, centers=4,  cluster_std=0.9,
-    #     center_box=(-0.0, 10.0), return_centers=True
-    # )
+    samples = [20, 200, 300, 150]
 
-    # X, y, centers = my_make_blobs(
-    #     [10, 100, 20, 50], centers=None,  cluster_std=[0.9, 0.5, 0.2, 0.7],
-    #     center_box=(-0.0, 10.0), return_centers=True
-    # )
-
-    samples = [100, 200, 300, 150]
-
-    X, y, centers = my_make_blobs.gen_cluster_normal(
-        samples, centers=None,  cluster_std=[0.4, 0.2, 0.2, 0.5],
+    X, centers = my_make_blobs.gen_cluster_normal(
+        samples, centers=None,  cluster_std=[0.2, 0.5, 0.8, 0.7],
         center_box=(-0.0, 10.0), return_centers=True
     )
 
@@ -37,7 +26,7 @@ def test_my_blobs():
                            for i in range(6)]) for _ in range(n_components)]
 
     for i in range(len(X)):
-        X[i] = my_make_blobs.weighted_sample_elimination(X[i], 1.5)
+        X[i] = my_make_blobs.weighted_sample_elimination(X[i], 0.95)
 
     for k, col in enumerate(colors):
         plt.scatter(X[k][:, 0], X[k][:, 1], c=col, marker=".", s=10)

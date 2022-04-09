@@ -19,7 +19,7 @@ def test_my_blobs():
 
     X, centers = my_make_blobs.gen_cluster_normal(
         samples, centers=None,  cluster_std=cluster_std,
-        center_box=(-0.0, 10.0), return_centers=True, wse=True
+        center_box=(-0.0, 10.0), return_centers=True, wse=True, wse_p=0.9
     )
     end = time.perf_counter()
 

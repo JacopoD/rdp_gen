@@ -29,6 +29,10 @@ def gen_cluster_normal(n_samples=[100], centers=None, cluster_std=1.0, center_bo
         XY: ndarray of ndarrays representing the clusters and their points
         (optional) centers: the centers of each cluster
     """
+
+    assert isinstance(n_samples, (list, np.ndarray)
+                      ), "Parameter `n_samples` must be list or ndarray"
+
     # Uncomment for reproducible results
     rng = np.random.default_rng()
 
@@ -105,11 +109,13 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
             default=(-5, 5)
             the bounding box for each cluster center
 
-        min_size (float or int): default=0.5
+        min_size (number or array-like): default=0.5
             the minimum width or height of the ellipse
+            if only one number is specified all the clusters will follow this parameter
 
-        max_size (float or int): default=5
+        max_size (number or array-like): default=5
             the maximum width or height of the ellipse
+            if only one number is specified all the clusters will follow this parameter
 
         (return_centers : boolean, default=True
         If True, return the coordinates of the centers)
@@ -140,13 +146,24 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
     TODO : decide if WSE should be applied before or after filtering the points
     """
 
+    if centers is not None and len(centers) != len(samples):
+        raise ValueError(
+            "Paramenter `centers` must have equal length as parameter `samples`")
+
+    if not isinstance(min_size, Iterable):
+        min_size = [min_size] * len(samples)
+
+    if not isinstance(max_size, Iterable):
+        max_size = [max_size] * len(samples)
+
+    assert len(max_size) == len(min_size) == len(
+        samples), "Parameter `max_size` and `min_size` when provided as array-like must have the same length of paramenter `samples`"
+
     # rng = np.random.default_rng(2022)
     rng = np.random.default_rng()
 
     n_centers = len(samples)
-    if centers is not None and len(centers) != len(samples):
-        raise ValueError(
-            "If provided, len(centers) must be equal to len(samples)")
+
     if centers is None:
         # Only 2D generation
         centers = rng.uniform(
@@ -159,8 +176,8 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
     # https://stackoverflow.com/questions/87734/how-do-you-calculate-the-axis-aligned-bounding-box-of-an-ellipse
     for i in range(len(samples)):
 
-        radiusX = rng.uniform(min_size, max_size)
-        radiusY = rng.uniform(radiusX, max_size)
+        radiusX = rng.uniform(min_size[i], max_size[i])
+        radiusY = rng.uniform(radiusX, max_size[i])
 
         phi = rng.uniform(0, 2*np.pi)
 
@@ -182,20 +199,20 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
         # ! Choose a strategy
 
         # Generate samples --> Removal of points not in ellipse --> Weighted sample elimination
-        # P = points_in_ellipse(rng.uniform(min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]),
-        #                       radiusX, radiusY, centers[i][0], centers[i][1], phi)
-        # if weighted_elim:
-        #     P = weighted_sample_elimination(P, 1.5)
-
-        # Generate samples --> Weighted sample elimination --> Removal of points not in ellipse
-        P = np.array(list(zip(rng.uniform(
-            min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]))))
-
+        P = points_in_ellipse(rng.uniform(min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]),
+                              radiusX, radiusY, centers[i][0], centers[i][1], phi)
         if wse:
             P = weighted_sample_elimination(P, 0.9)
 
-        P = points_in_ellipse(P[:, 0], P[:, 1], radiusX,
-                              radiusY, centers[i][0], centers[i][1], phi)
+        # Generate samples --> Weighted sample elimination --> Removal of points not in ellipse
+        # P = np.array(list(zip(rng.uniform(
+        #     min_x, max_x, samples[i]), rng.uniform(min_y, max_y, samples[i]))))
+
+        # if wse:
+        #     P = weighted_sample_elimination(P, 0.9)
+
+        # P = points_in_ellipse(P[:, 0], P[:, 1], radiusX,
+        #                       radiusY, centers[i][0], centers[i][1], phi)
 
         XY.append(P)
         bboxes.append((bbox_halfwidth, bbox_halfheight))

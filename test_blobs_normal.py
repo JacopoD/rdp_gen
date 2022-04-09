@@ -44,7 +44,7 @@ def test_my_blobs():
         sum(samples)-s, sum(samples), end-start))
 
     button = Button(plt.axes([0.81, 0.000001, 0.1, 0.075]),
-                    'Show bbox', hovercolor='0.975')
+                    'Show conf ell', hovercolor='0.975')
 
     def reset(event):
         for c in C:
@@ -54,8 +54,6 @@ def test_my_blobs():
     button.on_clicked(reset)
 
     plt.title("My Blobs")
-    # plt.xticks([])
-    # plt.yticks([])
     plt.show()
 
 

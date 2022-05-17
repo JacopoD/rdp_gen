@@ -33,7 +33,7 @@ def test_my_blobs():
     for k, col in enumerate(colors):
         plt.scatter(X[k][:, 0], X[k][:, 1], c=col, marker=".", s=10)
 
-    # plt.scatter(centers[:, 0], centers[:, 1], c="b", s=50)
+    plt.scatter(centers[:, 0], centers[:, 1], c="b", s=50)
     s = 0
     C = []
     for j in range(len(X)):

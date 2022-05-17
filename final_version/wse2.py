@@ -1,20 +1,20 @@
 import numpy as np
-import miniball
 from scipy.spatial import KDTree
 import heapq
 import math
+from mec import make_circle
 
 
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html
 # http://www.cemyuksel.com/research/sampleelimination/sampleelimination.pdf
-# https://pypi.org/project/miniball/
 
 class Sample:
-    def __init__(self, coords, neighbors=[], weight=0, index=-1) -> None:
+    def __init__(self, coords, neighbors=[], weight=0, index=-1, index_test=-1) -> None:
         self.coords = coords
         self.neighbors = neighbors
         self.weight = weight
         self.index = index
+        self.index_test = index_test
 
     def get_weight(self):
         return self.weight
@@ -39,7 +39,7 @@ class Sample:
         return s
 
 
-def weighted_sample_elimination(S_np, percentage=1, return_radius=False):
+def weighted_sample_elimination(S_np: np.ndarray, percentage: float = 1, return_radius: bool = False, start: int = 0, end: int = None, verbose: bool = False) -> int:
     """
     Applies weighted sample elimination to the given set of points,
     this algorithm is based on: http://www.cemyuksel.com/research/sampleelimination/sampleelimination.pdf
@@ -51,7 +51,7 @@ def weighted_sample_elimination(S_np, percentage=1, return_radius=False):
 
         percentage (int or float): 
             default=1
-            percentage of samples that will have no neighbors, number from 0 to 1
+            percentage of samples that will have weight = 0, number from 0 to 1
     Returns:
 
         numpy.ndarray: of length len(S_np) // factor, containing the points with lowest weight
@@ -61,93 +61,94 @@ def weighted_sample_elimination(S_np, percentage=1, return_radius=False):
     TODO:   Another strategy could be replacing "dead" neighbors with an invalid index such as -1
 
     """
+    if start == end:
+        if verbose:
+            print("No samples, skipping\n")
+        return 0
 
     if percentage > 1 or percentage < 0:
         raise ValueError
 
-    if not isinstance(S_np, np.ndarray):
-        S_np = np.array(S_np)
+    if end is None:
+        end = len(S_np)
+
+    S_np_cut = S_np[start: end]
 
     # Circle inscribing all the points in S
-    C, r2 = miniball.get_bounding_ball(S_np)
-    c_area = r2 * np.pi
+    mec = make_circle(S_np_cut)
+
+    c_area = mec[2] * mec[2] * np.pi
 
     # Build a kd-tree with the points
-    kd = KDTree(S_np)
+    kd = KDTree(S_np_cut)
 
-    r_max_2d = np.sqrt(c_area/(2*np.sqrt(3)*len(S_np)))
-
-    # Tuples are hashable, np arrays are not
-    S = list(map(tuple, S_np))
+    r_max_2d = np.sqrt(c_area/(2*np.sqrt(3)*len(S_np_cut)))
 
     samples = dict()
 
     pq = []
 
-    for i, s in enumerate(S):
-        new_s = Sample(coords=s, index=i)
-        samples[s] = new_s
+    j = 0
+    for i in range(start, end, 1):
+        t = (S_np[i][0], S_np[i][1])
+        new_s = Sample(coords=t, index=i, index_test=j)
+        samples[t] = new_s
+        j += 1
 
     N = kd.query_ball_tree(kd, r_max_2d)
     no_w_count = 0
 
-    for i, s in enumerate(S):
-        s_obj = samples[s]
-        s_obj.neighbors = N[i]
-        for k, n in enumerate(N[i]):
-            if k == 0:
-                continue
-            d_ij = math.dist(s_obj.coords, S[n])
+    for i in range(start, end, 1):
+        s = S_np[i]
+        s_obj = samples[(s[0], s[1])]
+        s_obj.neighbors = N[i-start]
+
+        for k in range(1, len(N[i-start])):
+            n = N[i-start][k]
+            d_ij = math.dist(s_obj.coords, S_np[n+start][:2])
             d_hat_ij = min(2 * r_max_2d, d_ij)
             s_obj.weight -= np.power(1-(d_hat_ij/2 * r_max_2d), 8)
         if s_obj.weight == 0:
             no_w_count += 1
         heapq.heappush(pq, s_obj)
 
-    # for key in samples:
-    #     print(samples[key])
+    if verbose:
+        print("{} samples ({}%) have weight 0 before any elimination".format(
+        no_w_count, (no_w_count*100)/len(S_np_cut)))
 
-    # for e in pq:
-        # print(samples[e])
+    v = int(percentage * len(S_np_cut)) - no_w_count
+    if v < 0:
+        v = 0
 
-    print("{} samples ({}%) have weight 0 before any elimination".format(
-        no_w_count, (no_w_count*100)/len(S)))
-
-    v = int(percentage * len(S)) - no_w_count
-
-    print("{} more samples will be removed to reach {}%".format(v, percentage*100))
+    if verbose:
+        print("{} more samples will be removed to reach {}%".format(v, percentage*100))
 
     removed_count = 0
 
-    for j in range(v):
+    for i in range(v):
         s_j = heapq.heappop(pq)
-        if s_j.weight == 0:
-            break
 
-        for i, s_i in enumerate(s_j.neighbors):
-            if i == 0 or s_i == -1:
+        for k, s_i in enumerate(s_j.neighbors):
+            if k == 0:
                 continue
-            if S[s_i] in samples:
-                s_i_obj = samples[S[s_i]]
-                s_i_obj.neighbors.remove(s_j.index)
+            s_i = s_j.neighbors[k] + start
+            s = S_np[s_i]
+            if (s[0], s[1]) in samples:
+                s_i_obj = samples[(s[0], s[1])]
+                s_i_obj.neighbors.remove(s_j.index - start)
                 s_i_obj.weight += s_j.weight
-                # print(s_i_obj)
                 if s_i_obj.weight == 0:
                     no_w_count += 1
         del samples[s_j.coords]
+        S_np[s_j.index][2] = -2
         removed_count += 1
 
-        # ! Test if this is needed, removing it would greatly increase performance
         heapq.heapify(pq)
 
-    for key in samples:
-        print(samples[key])
-
-    print("{}% of the samples are now with weight = 0\n{} samples have been removed".format(
-        percentage*100, removed_count))
+    if verbose:
+        print("{}% of the samples are now with weight = 0\n{} samples have been removed\n".format(
+            percentage*100, removed_count))
 
     if return_radius:
-        return np.array(list(map(lambda x: samples[x].coords, samples))), r_max_2d
-    return np.array(list(map(lambda x: samples[x].coords, samples)))
-
-    # return np.array(list(map(lambda x: x.coords, pq)))
+        return r_max_2d
+    return removed_count

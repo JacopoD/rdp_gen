@@ -11,10 +11,11 @@ import matplotlib.pyplot as plt
 def main():
     rng = np.random.default_rng(2022)
     S = rng.normal((0, 0), scale=0.5, size=(20, 2))
-    S1, radius = wse.weighted_sample_elimination(S, 1)
+    S1, radius = wse.weighted_sample_elimination(S, 1, return_radius=True)
 
     fig, ax = plt.subplots()
 
+    ax.plot(0, 0, ls="", marker="o", color="red")
     ax.plot(S[:, 0], S[:, 1], ls="", marker="o", color="green")
     ax.plot(S1[:, 0], S1[:, 1], ls="", marker="o")
 

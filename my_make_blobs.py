@@ -174,8 +174,8 @@ def gen_cluster_uniform(samples=[100], centers=None, center_box=(-5, 5), min_siz
     assert len(max_size) == len(min_size) == len(
         samples), "Parameter `max_size` and `min_size` when provided as array-like must have the same length of paramenter `samples`"
 
-    # rng = np.random.default_rng(2022)
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(2022)
+    # rng = np.random.default_rng()
 
     n_centers = len(samples)
 

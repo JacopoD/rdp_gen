@@ -73,7 +73,7 @@ def generate_img(overlays_path, overlay_n, background_path = None, verbose = Fal
         print("Generation canvas size: {}".format(generation_canvas))
 
     S = generate_canvas(
-        width=generation_canvas[0], height=generation_canvas[1], n_samples=300, n_ellipses=5,
+        width=generation_canvas[0], height=generation_canvas[1], n_samples=200, n_ellipses=5,
         ellipse_ranges=[(5, 10), (2, 7), (2, 3), (4, 7), (2, 5)],
         ellipse_ratios=[(0.6, 0.8), (0.9, 1), (0.3, 0.8),(0.3, 0.8),(0.3, 0.8)],
         wse_factor_background=1,
@@ -88,6 +88,7 @@ def generate_img(overlays_path, overlay_n, background_path = None, verbose = Fal
         # print("{},{} --> {},{}".format(s[0],s[1],p_scaled[0],p_scaled[1]))
         i = random.randint(0, overlay_n-1)
         ov = overlays[i].rotate(random.randint(0,360), resample=Image.BICUBIC)
+        
         if fits(ov, img, p_scaled):
             img.paste(ov, p_scaled, ov)
     

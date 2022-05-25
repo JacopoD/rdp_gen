@@ -53,11 +53,13 @@ def generate_canvas(n_ellipses: int, ellipse_ranges: list, ellipse_ratios: list,
     r = 0
     for i in range(len(pos)):
         if i == 0:
-            print("WSE on background:")
+            if verbose:
+                print("WSE on background:")
             r += wse2.weighted_sample_elimination(S,
                                                   wse_factor_background, False, 0, pos[i], verbose=verbose)
         else:
-            print("WSE on ellipse {}:".format(i-1))
+            if verbose:
+                print("WSE on ellipse {}:".format(i-1))
             r += wse2.weighted_sample_elimination(S,
                                                   ellipse_wse[i-1], False, pos[i-1], pos[i], verbose=verbose)
     if verbose:
@@ -67,55 +69,54 @@ def generate_canvas(n_ellipses: int, ellipse_ranges: list, ellipse_ratios: list,
 
 
 def gen_ellipse(rng, canvas: tuple, range: tuple, ratio: float, existing_test: list = [], verbose: bool = False):
-    # if range is None:
-    #     range = (np.sqrt(abs(min(canvas))), abs(min(canvas))/2)
-
+    
+    ok = False
     tries = 0
     max_tries = 10
     while tries < max_tries:
         tries += 1
 
-        # This code can be moved out of the loop if the second approach is used
-        # From here
         radius_x = rng.uniform(range[0], range[1])
-        # radius_y = rng.uniform(range[0], range[1])
         radius_y = radius_x * rng.uniform(ratio[0], ratio[1])
 
         phi = rng.uniform(0, 2*np.pi)
-        # To here
 
         c_x = rng.uniform(canvas[0], canvas[1])
         c_y = rng.uniform(canvas[2], canvas[3])
 
-        # if not center_overlap(S=existing_test, ellipse=(radius_x, radius_y, c_x, c_y, phi)):
-        #     break
-        if not center_overlap3(E=existing_test, c=(c_x, c_y)):
-            break
-        if verbose:
+        ok = True
+        for e in existing_test:
+            if in_ellipse(e, (c_x, c_y)):
+                ok = False
+                break
+        if ok:
+            for e in existing_test:
+                if in_ellipse((radius_x, radius_y, c_x, c_y, phi), (e[2],e[3])):
+                    ok = False
+                    break
+        
+        if verbose and not ok:
             print("Center overlap, try {}/{}".format(tries, max_tries))
         # range = (range[0]/2, range[1]/2)
 
     return (radius_x, radius_y, c_x, c_y, phi)
 
 
-def center_overlap3(E, c):
+def in_ellipse(E, p):
+    cos_angle = np.cos(E[4])
+    sin_angle = np.sin(E[4])
 
-    for ellipse in E:
-        cos_angle = np.cos(ellipse[4])
-        sin_angle = np.sin(ellipse[4])
+    a2 = E[0]*E[0]
+    b2 = E[1]*E[1]
+    s_x = p[0]
+    s_y = p[1]
+    r = np.power(cos_angle * (s_x - E[2]) + sin_angle * (s_y - E[3]), 2) / a2 + \
+        np.power(
+            sin_angle * (s_x - E[2]) - cos_angle * (s_y - E[3]), 2) / b2
 
-        a2 = ellipse[0]*ellipse[0]
-        b2 = ellipse[1]*ellipse[1]
-        s_x = c[0]
-        s_y = c[1]
-        r = np.power(cos_angle * (s_x - ellipse[2]) + sin_angle * (s_y - ellipse[3]), 2) / a2 + \
-            np.power(
-                sin_angle * (s_x - ellipse[2]) - cos_angle * (s_y - ellipse[3]), 2) / b2
-
-        if r <= 1:
-            return True
+    if r <= 1:
+        return True
     return False
-
 
 def points_in_ellipse(S: np.ndarray, ellipse: tuple, ellipse_id: int):
 

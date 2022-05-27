@@ -1,8 +1,5 @@
 import numpy as np
 import wse2
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-
 
 # TODO Ellipse generation: possibility to limit size
 # TODO Ellipse generation: find a way to prevent the center of an ellipse to be inside another
@@ -28,7 +25,7 @@ def generate_canvas(n_ellipses: int, ellipse_ranges: list, ellipse_ratios: list,
     max_y = height
     min_y = 0
 
-    # rng = np.random.default_rng(2022)
+    # rng = np.random.default_rng(2048)
     rng = np.random.default_rng()
 
     canvas = (min_x, max_x, min_y, max_y)
@@ -45,6 +42,8 @@ def generate_canvas(n_ellipses: int, ellipse_ranges: list, ellipse_ratios: list,
         #     r = ellipse_ranges[i]
         e = gen_ellipse(rng=rng, canvas=canvas,
                         existing_test=E, range=ellipse_ranges[i], ratio=ellipse_ratios[i], verbose=verbose)
+        if verbose:
+            print("Ellipse {}: {}".format(i,e))
         E.append(e)
         points_in_ellipse(S, e, i)
 
@@ -63,9 +62,9 @@ def generate_canvas(n_ellipses: int, ellipse_ranges: list, ellipse_ratios: list,
             r += wse2.weighted_sample_elimination(S,
                                                   ellipse_wse[i-1], False, pos[i-1], pos[i], verbose=verbose)
     if verbose:
-        print("{}/{} samples removed".format(r, len(S)))
-    # return S, E, canvas
-    return S
+        print("{}/{} samples removed by WSE".format(r, len(S)))
+    return S, E, canvas, r
+    # return S
 
 
 def gen_ellipse(rng, canvas: tuple, range: tuple, ratio: float, existing_test: list = [], verbose: bool = False):

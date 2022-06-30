@@ -1,13 +1,25 @@
 {
-  "background_path": null,
+  "background_path": "./backgrounds/b1_gen.png",
   "output_path": null,
-  "overlays_path": "./insects/",
-  "merge_path": null,
+  "overlays_path": "./insects2/",
+  "overlays_scaling": 0.04,
+  "merge_path": "./backgrounds/b1_gen_rest.png",
 
   "n_samples": 300,
-  "n_clusters": 2,
-  "ellipse_ranges": null,
-  "ellipse_ratios": null,
-  "wse_background": null,
-  "ellipses_wse": null
+  "n_clusters": 4,
+  "ellipse_ranges": [
+    [14, 14],
+    [12, 12],
+    [10, 10],
+    [10, 10]
+  ],
+  "overlay_n": 3,
+  "ellipse_ratios": [
+    [0.4, 0.5],
+    [0.8, 0.8],
+    [0.5, 0.5],
+    [0.4, 0.6]
+  ],
+  "wse_background": 1,
+  "ellipses_wse": [0.7, 0.6, 0.4, 0.4]
 }

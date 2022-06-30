@@ -84,6 +84,7 @@ def weighted_sample_elimination(S_np: np.ndarray, percentage: float = 1, return_
     kd = KDTree(S_np_cut)
 
     r_max_2d = np.sqrt(c_area/(2*np.sqrt(3)*len(S_np_cut)))
+    # r_max_2d = np.sqrt(c_area/(2*np.sqrt(3)))
 
     samples = dict()
 
@@ -113,14 +114,14 @@ def weighted_sample_elimination(S_np: np.ndarray, percentage: float = 1, return_
             no_w_count += 1
         heapq.heappush(pq, s_obj)
 
-    print("{} samples ({}%) have weight 0 before any elimination".format(
-        no_w_count, (no_w_count*100)/len(S_np_cut)))
+    # print("{} samples ({}%) have weight 0 before any elimination".format(
+        # no_w_count, (no_w_count*100)/len(S_np_cut)))
 
     v = int(percentage * len(S_np_cut)) - no_w_count
     if v < 0:
         v = 0
 
-    print("{} more samples will be removed to reach {}%".format(v, percentage*100))
+    # print("{} more samples will be removed to reach {}%".format(v, percentage*100))
 
     removed_count = 0
 
@@ -144,9 +145,23 @@ def weighted_sample_elimination(S_np: np.ndarray, percentage: float = 1, return_
 
         heapq.heapify(pq)
 
-    print("{}% of the samples are now with weight = 0\n{} samples have been removed".format(
-        percentage*100, removed_count))
+    # print("{}% of the samples are now with weight = 0\n{} samples have been removed".format(
+        # percentage*100, removed_count))
 
     if return_radius:
         return r_max_2d
     return removed_count
+
+
+
+
+def test():
+    rng = np.random.default_rng()
+    for i in range(100,10000,100):
+    # i = 10000
+        S = np.rot90([rng.uniform(0,500, i), rng.uniform(0,500, i), [-1]*i])
+        print("{};{}".format(weighted_sample_elimination(S, 0.5),i))
+
+
+if __name__ == "__main__":
+    test()

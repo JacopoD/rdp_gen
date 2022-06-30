@@ -1,3 +1,4 @@
+from turtle import color
 import numpy as np
 import wse2
 import matplotlib.pyplot as plt
@@ -36,7 +37,8 @@ def gen_canvas(n_ellipses: int, ellipse_ranges: list, ellipse_ratios: list, elli
     max_y = height
     min_y = 0
 
-    rng = np.random.default_rng(2022)
+    rng = np.random.default_rng(86541)
+    # rng = np.random.default_rng()
 
     canvas = (min_x, max_x, min_y, max_y)
 
@@ -63,8 +65,9 @@ def gen_canvas(n_ellipses: int, ellipse_ranges: list, ellipse_ratios: list, elli
             r += wse2.weighted_sample_elimination(S,
                                                   wse_factor_background, False, 0, pos[i])
         else:
-            r += wse2.weighted_sample_elimination(S,
-                                                  ellipse_wse[i-1], False, pos[i-1], pos[i])
+            # r += wse2.weighted_sample_elimination(S,
+            #                                       ellipse_wse[i-1], False, pos[i-1], pos[i])
+            pass
     print("{}/{} samples removed".format(r, len(S)))
     # print("Seed: ", np.random.get_state())
     return S, E, canvas
@@ -73,9 +76,9 @@ def gen_canvas(n_ellipses: int, ellipse_ranges: list, ellipse_ratios: list, elli
 def gen_ellipse(rng, canvas: tuple, range: tuple, ratio: float, existing_test: list = []):
     # if range is None:
     #     range = (np.sqrt(abs(min(canvas))), abs(min(canvas))/2)
-
+    ok = False
     tries = 0
-    while tries < 10:
+    while tries < 10 and not ok:
         tries += 1
 
         # This code can be moved out of the loop if the second approach is used
@@ -90,14 +93,43 @@ def gen_ellipse(rng, canvas: tuple, range: tuple, ratio: float, existing_test: l
         c_x = rng.uniform(canvas[0], canvas[1])
         c_y = rng.uniform(canvas[2], canvas[3])
 
-        # if not center_overlap(S=existing_test, ellipse=(radius_x, radius_y, c_x, c_y, phi)):
-        #     break
-        if not center_overlap3(E=existing_test, c=(c_x, c_y)):
-            break
-        print("Center overlap")
+        # if not center_overlap3(E=existing_test, c=(c_x, c_y)):
+            # break
+        ok = True
+        for e in existing_test:
+            if in_ellipse(e, (c_x, c_y)):
+                ok = False
+                print("Center overlap")
+                break
+        if ok:
+            for e in existing_test:
+                if in_ellipse((radius_x, radius_y, c_x, c_y, phi), (e[2],e[3])):
+                    ok = False
+                    print("Center overlap")
+                    break
+        
+        
         # range = (range[0]/2, range[1]/2)
 
     return (radius_x, radius_y, c_x, c_y, phi)
+
+
+def in_ellipse(E, p):
+    cos_angle = np.cos(E[4])
+    sin_angle = np.sin(E[4])
+
+    a2 = E[0]*E[0]
+    b2 = E[1]*E[1]
+    s_x = p[0]
+    s_y = p[1]
+    r = np.power(cos_angle * (s_x - E[2]) + sin_angle * (s_y - E[3]), 2) / a2 + \
+        np.power(
+            sin_angle * (s_x - E[2]) - cos_angle * (s_y - E[3]), 2) / b2
+
+    if r <= 1:
+        return True
+    return False
+
 
 
 def center_overlap3(E, c):
@@ -190,20 +222,22 @@ def show_canvas(S, E, canvas):
     plt.xlim(canvas[0], canvas[1])
     plt.ylim(canvas[2], canvas[3])
 
-    colors = ["#"+''.join([random.choice('ABCDEF0123456789')
-                           for i in range(6)]) for _ in range(n_ellipses)]
+    # colors = ["#"+''.join([random.choice('ABCDEF0123456789')
+    #                        for i in range(6)]) for _ in range(n_ellipses)]
+
+    colors = ["red","green"]
 
     for s in S:
         # ax2.plot(s[0], s[1], c="blue", marker=".", markersize=2)
         if s[2] == -2:
             continue
 
-        # if s[2] == -1:
-        #     c = "b"
-        # else:
-        #     c = colors[int(s[2])]
+        if s[2] == -1:
+            c = "blue"
+        else:
+            c = colors[int(s[2])]
 
-        c = "b"
+        # c = "b"
 
         ax.plot(s[0], s[1], c=c, marker=".", markersize=2)
 
@@ -215,7 +249,7 @@ def show_canvas(S, E, canvas):
         ax.add_patch(a)
         Ep.append(a)
 
-    # fig.savefig('3000_wse_2022.png', dpi=120)
+    fig.savefig('WSE_SHOW_BG08_ENO.png', dpi=120)
 
     button = Button(plt.axes([0.81, 0.000001, 0.1, 0.075]),
                     'Show bbox', hovercolor='0.975')
@@ -228,7 +262,3 @@ def show_canvas(S, E, canvas):
     button.on_clicked(reset)
     plt.show()
     pass
-
-
-if __name__ == "__main__":
-    show_canvas(gen_canvas(n_samples=2000, n_ellipses=2))

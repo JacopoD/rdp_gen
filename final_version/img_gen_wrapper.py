@@ -30,10 +30,9 @@ def main():
             config["verbose"] = False
         parse_config(config)
 
-    # img_gen.generate_img("./insects/", 4, background_path=b_path, output_path=o_path, verbose=verbose, merge_path=merge_path)
     img_gen.generate_img(config)
 
-OPTIONAL = ["background_path", "output_path", "merge_path", "ellipse_ranges", "ellipse_ratios","wse_background", "ellipses_wse", "overlay_n"]
+OPTIONAL = ["background_path", "output_path", "merge_path", "ellipse_ranges", "ellipse_ratios","wse_background", "ellipses_wse", "overlay_n", "overlays_scaling"]
 
 def parse_config(config):
     if (not "n_samples" in config) or (not "n_clusters" in config) or (not "overlays_path" in config):
